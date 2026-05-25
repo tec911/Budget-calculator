@@ -8,7 +8,6 @@ Dynamic Variable Expenses: Includes a UI-driven function to add an unlimited num
 
 Real-time Budget Calculation: Automatically computes the monthly surplus or deficit by subtracting total fixed and variable expenses from the primary income.
 
-
 Holiday Planning & Goal Setting
 
 Dedicated Holiday Expenses: Tracks specific travel-related costs (Tickets/Gas, Hotel/Camping, Food, Entertainment).
