@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Budget & Holiday Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; }
+        .card { background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+<div class="max-w-4xl mx-auto space-y-8">
+    <h1 class="text-3xl font-bold text-slate-800 text-center">Budget & Holiday Planner</h1>
+
+    <div class="card p-4 grid md:grid-cols-3 gap-4 items-center justify-center">
+        <div>
+            <label class="block text-sm font-semibold mb-1">Base Currency:</label>
+            <select id="baseCurrency" onchange="updateAll()" class="w-full p-2 border rounded"></select>
+        </div>
+        <div>
+            <label class="block text-sm font-semibold mb-1">Holiday Currency 1:</label>
+            <select id="altCurrency1" onchange="updateAll()" class="w-full p-2 border rounded"></select>
+        </div>
+        <div>
+            <label class="block text-sm font-semibold mb-1">Holiday Currency 2:</label>
+            <select id="altCurrency2" onchange="updateAll()" class="w-full p-2 border rounded"></select>
+        </div>
+    </div>
+
+    <div class="card p-6">
+        <h2 class="text-xl font-semibold mb-4 text-slate-700">Monthly Budget</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium">Primary Income</label>
+                <input type="text" id="primaryIncome" onblur="formatInput(this); updateAll()" class="w-full p-2 border rounded mt-1" placeholder="0.00">
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-medium mb-2">Fixed Expenses</h3>
+                    <div id="fixedExpenses" class="space-y-2">
+                        <div class="flex gap-2"><span class="flex-1 p-2 bg-gray-50 rounded">Rent</span><input type="text" onblur="formatInput(this); updateAll()" class="fixed-exp w-24 p-2 border rounded" value="0.00"></div>
+                        <div class="flex gap-2"><span class="flex-1 p-2 bg-gray-50 rounded">Utilities</span><input type="text" onblur="formatInput(this); updateAll()" class="fixed-exp w-24 p-2 border rounded" value="0.00"></div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2">Variable Expenses</h3>
+                    <div id="variableExpenses" class="space-y-2">
+                        <div class="flex gap-2"><span class="flex-1 p-2 bg-gray-50 rounded">Groceries</span><input type="text" onblur="formatInput(this); updateAll()" class="var-exp w-24 p-2 border rounded" value="0.00"></div>
+                        <div class="flex gap-2"><span class="flex-1 p-2 bg-gray-50 rounded">Entertainment</span><input type="text" onblur="formatInput(this); updateAll()" class="var-exp w-24 p-2 border rounded" value="0.00"></div>
+                    </div>
+                    <button onclick="addInput('variableExpenses', 'var-exp')" class="mt-2 text-sm text-blue-600 hover:underline">+ Add more</button>
+                </div>
+            </div>
+            <div id="budgetResult" class="text-center font-bold text-lg p-4 rounded mt-4"></div>
+        </div>
+    </div>
+
+    <div class="card p-6">
+        <h2 class="text-xl font-semibold mb-4 text-slate-700">Holiday Planner</h2>
+        <div id="holidayExpenses" class="space-y-2">
+            <div class="flex gap-2"><span class="flex-1 p-2 bg-gray-50 rounded">Tickets/Gas</span><input type="text" onblur="formatInput(this); updateAll()" class="hol-exp w-24 p-2 border rounded" value="0.00"></div>
+            <div class="flex gap-2"><span class="flex-1 p-2 bg-gray-50 rounded">Hotel/Camping</span><input type="text" onblur="formatInput(this); updateAll()" class="hol-exp w-24 p-2 border rounded" value="0.00"></div>
+            <div class="flex gap-2"><span class="flex-1 p-2 bg-gray-50 rounded">Food</span><input type="text" onblur="formatInput(this); updateAll()" class="hol-exp w-24 p-2 border rounded" value="0.00"></div>
+            <div class="flex gap-2"><span class="flex-1 p-2 bg-gray-50 rounded">Entertainment</span><input type="text" onblur="formatInput(this); updateAll()" class="hol-exp w-24 p-2 border rounded" value="0.00"></div>
+        </div>
+        <button onclick="addInput('holidayExpenses', 'hol-exp')" class="mt-2 text-sm text-blue-600 hover:underline">+ Add expense</button>
+        <div id="holidayResult" class="mt-4 p-4 text-center border-t"></div>
+    </div>
+</div>
+
+<script>
+    const currencies = ['USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CAD', 'CHF', 'CNY', 'HKD', 'NZD', 'SEK', 'KRW', 'SGD', 'NOK', 'MXN', 'INR', 'RUB', 'ZAR', 'TRY', 'BRL'];
+    
+    // Initialize Selects
+    document.querySelectorAll('select').forEach(sel => {
+        currencies.forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
+    });
+    document.getElementById('baseCurrency').value = 'USD';
+    document.getElementById('altCurrency1').value = 'EUR';
+    document.getElementById('altCurrency2').value = 'GBP';
+
+    const parseVal = (v) => parseFloat(v.toString().replace(/,/g, '')) || 0;
+
+    function formatInput(el) {
+        const val = parseVal(el.value);
+        el.value = val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatCurrency(val, currency) {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(val);
+    }
+
+    function addInput(containerId, className) {
+        const div = document.createElement('div');
+        div.className = 'flex gap-2';
+        div.innerHTML = `<input type="text" placeholder="Expense name" class="flex-1 p-2 border rounded"><input type="text" onblur="formatInput(this); updateAll()" class="${className} w-24 p-2 border rounded" value="0.00">`;
+        document.getElementById(containerId).appendChild(div);
+    }
+
+    function updateAll() {
+        calculateBudget();
+        calculateHoliday();
+    }
+
+    function calculateBudget() {
+        const income = parseVal(document.getElementById('primaryIncome').value);
+        const fixed = Array.from(document.querySelectorAll('.fixed-exp')).reduce((a, b) => a + parseVal(b.value), 0);
+        const variable = Array.from(document.querySelectorAll('.var-exp')).reduce((a, b) => a + parseVal(b.value), 0);
+        const total = income - fixed - variable;
+        const res = document.getElementById('budgetResult');
+        const base = document.getElementById('baseCurrency').value;
+        
+        if (total < 0) { 
+            res.className = "text-center font-bold text-lg p-4 bg-red-100 text-red-700 rounded"; 
+            res.innerText = `Balance: ${formatCurrency(total, base)}. Please adjust expenses.`; 
+        } else if (total === 0) { 
+            res.className = "text-center font-bold text-lg p-4 bg-yellow-100 text-yellow-700 rounded"; 
+            res.innerText = "Good job! You are breaking even."; 
+        } else { 
+            res.className = "text-center font-bold text-lg p-4 bg-green-100 text-green-700 rounded"; 
+            res.innerText = `Great job! Remaining budget: ${formatCurrency(total, base)}`; 
+        }
+    }
+
+    async function calculateHoliday() {
+        const holidayTotal = Array.from(document.querySelectorAll('.hol-exp')).reduce((a, b) => a + parseVal(b.value), 0);
+        const res = document.getElementById('holidayResult');
+        const base = document.getElementById('baseCurrency').value;
+        const alt1 = document.getElementById('altCurrency1').value;
+        const alt2 = document.getElementById('altCurrency2').value;
+        
+        const income = parseVal(document.getElementById('primaryIncome').value);
+        const fixed = Array.from(document.querySelectorAll('.fixed-exp')).reduce((a, b) => a + parseVal(b.value), 0);
+        const variable = Array.from(document.querySelectorAll('.var-exp')).reduce((a, b) => a + parseVal(b.value), 0);
+        const savings = income - fixed - variable;
+
+        if (savings <= 0) { 
+            res.innerHTML = `<p class="text-red-600">Total Holiday Cost: ${formatCurrency(holidayTotal, base)}</p><p>Need a positive surplus to save!</p>`; 
+            return; 
+        }
+        
+        const months = Math.ceil(holidayTotal / savings);
+        let conversionHtml = "";
+
+        try {
+            const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${base}`);
+            const data = await response.json();
+            [alt1, alt2].forEach(c => {
+                if (c && data.rates[c]) {
+                    conversionHtml += `<p class="text-sm text-gray-500">${c}: ${formatCurrency(holidayTotal * data.rates[c], c)}</p>`;
+                }
+            });
+        } catch(e) { console.error(e); }
+
+        res.innerHTML = `<p class="font-bold">Total Cost: ${formatCurrency(holidayTotal, base)}</p>${conversionHtml}<p class="mt-2">It will take ${months} month(s) to save.</p>`;
+    }
+</script>
+</body>
+</html>
